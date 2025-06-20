@@ -1,122 +1,125 @@
-# Real-Time Object Recognition with CIFAR-100 and Project Explanation App
+# Análisis de Agrupamiento con K-means y Reducción de Dimensionalidad con PCA
 
-This project combines a powerful deep learning model for object recognition with a modern web application to explain its inner workings. It consists of two main components:
+Este proyecto implementa el algoritmo de agrupamiento K-means junto con Análisis de Componentes Principales (PCA) para el análisis exploratorio de datos. El objetivo es agrupar conjuntos de datos en grupos homogéneos y visualizar los resultados en un espacio reducido de dimensiones.
 
-1.  **Python Object Recognition Model**: A Convolutional Neural Network (CNN) trained on the CIFAR-100 dataset. It can be used for training from scratch and for real-time object recognition using a computer's webcam.
-2.  **React Explanation App**: A detailed, user-friendly web application that breaks down the Python project, explaining each script, the model architecture, and tools like TensorBoard for monitoring the training process.
-
-## Project Structure
+## Estructura del Proyecto
 
 ```
 /
-|-- explanation-app/      # React application for project explanation
-|   |-- public/
-|   |-- src/
-|   |-- package.json
-|   `-- ...
-|-- model.py              # CNN model definition (SimpleCNN)
-|-- train.py              # Script to train the model
-|-- predict.py            # Script for real-time prediction using the webcam
-|-- utils.py              # Utility functions (e.g., data loading)
-|-- requirements.txt      # Python dependencies
+|-- data/                  # Datos de ejemplo
+|-- notebooks/             # Jupyter notebooks con análisis
+|-- src/                   # Código fuente
+|   |-- kmeans.py          # Implementación del algoritmo K-means
+|   |-- pca.py             # Implementación de PCA
+|   |-- utils.py           # Funciones auxiliares
+|   `-- visualization.py   # Visualización de resultados
+|-- requirements.txt       # Dependencias de Python
 |-- .gitignore
 `-- README.md
 ```
 
-## Technologies Used
+## Tecnologías Utilizadas
 
-*   **Backend & Model**:
-    *   Python
-    *   PyTorch
-    *   OpenCV
-    *   NumPy
-    *   Matplotlib
-    *   TensorBoard
+*   **Lenguaje Principal**:
+    *   Python 3.x
 
-*   **Frontend**:
-    *   React
-    *   JavaScript
+*   **Librerías Principales**:
+    *   NumPy - Cálculos numéricos
+    *   Pandas - Manipulación de datos
+    *   Matplotlib - Visualización de datos
+    *   Scikit-learn - Implementación de referencia para comparación
 
-## Setup and Installation
+*   **Herramientas de Desarrollo**:
+    *   Jupyter Notebook - Análisis interactivo
+    *   Git - Control de versiones
 
-### 1. Python Environment
+## Instalación
 
-It is recommended to use a virtual environment to manage Python dependencies.
+### 1. Entorno Python
+
+Se recomienda utilizar un entorno virtual para gestionar las dependencias de Python.
 
 ```bash
-# Create and activate a virtual environment (e.g., venv)
+# Crear y activar un entorno virtual
 python -m venv venv
-# On Windows, use `venv\Scripts\activate`
-# On Linux/macOS, use `source venv/bin/activate`
+# En Windows:
+venv\Scripts\activate
+# En Linux/macOS:
+source venv/bin/activate
 
-# Install the required packages
+# Instalar las dependencias
 pip install -r requirements.txt
 ```
 
-### 2. React Explanation App
+## Uso
 
-Navigate to the `explanation-app` directory and install the necessary Node.js packages.
+### 1. Cargar y Preprocesar Datos
 
-```bash
-cd explanation-app
-npm install
+```python
+from src.utils import load_data
+from src.pca import PCA
+from src.kmeans import KMeans
+
+# Cargar datos
+data = load_data('ruta/al/archivo.csv')
+
+# Normalizar datos
+data_normalized = (data - data.mean()) / data.std()
 ```
 
-## Usage
+### 2. Aplicar PCA para Reducción de Dimensionalidad
 
-### 1. Training the Model
+```python
+# Inicializar PCA
+pca = PCA(n_components=2)
 
-To train the CNN model on the CIFAR-100 dataset, run the `train.py` script from the root directory.
 
-```bash
-python train.py
+# Ajustar y transformar datos
+data_pca = pca.fit_transform(data_normalized)
 ```
 
-You can monitor the training process using TensorBoard:
+### 3. Aplicar K-means para Agrupamiento
 
-```bash
-tensorboard --logdir=runs
+```python
+# Inicializar K-means
+kmeans = KMeans(k=3, max_iters=100)
+
+# Ajustar el modelo
+clusters = kmeans.fit_predict(data_pca)
 ```
 
-### 2. Real-Time Object Recognition
+### 4. Visualizar Resultados
 
-After training, a model file (e.g., `cifar100_model.pth`) will be saved. Use this model for real-time recognition with your webcam by running `predict.py`.
+```python
+from src.visualization import plot_clusters
 
-```bash
-python predict.py
+# Visualizar clusters
+plot_clusters(data_pca, clusters, kmeans.centroids)
 ```
 
-### 3. Viewing the Explanation App
+## Algoritmos Implementados
 
-To launch the React application that explains the project:
+### K-means
 
-```bash
-cd explanation-app
-npm start
-```
+K-means es un algoritmo de agrupamiento que busca dividir un conjunto de datos en K grupos, donde cada observación pertenece al grupo cuya media es más cercana. El algoritmo itera entre dos pasos principales:
 
-This will open a new tab in your browser with the explanation app.
+1. **Asignación**: Cada punto se asigna al centroide más cercano.
+2. **Actualización**: Se actualiza la posición de los centroides como la media de los puntos asignados.
 
-## Model Architecture: `SimpleCNN`
+### Análisis de Componentes Principales (PCA)
 
-The `SimpleCNN` model, defined in `model.py`, has the following structure:
+PCA es una técnica de reducción de dimensionalidad que transforma un conjunto de variables correlacionadas en un conjunto más pequeño de variables no correlacionadas llamadas componentes principales. Los componentes principales son combinaciones lineales de las variables originales que capturan la mayor varianza posible en los datos.
 
-1.  **Four Convolutional Blocks**: Each block consists of a `Conv2d` layer, `BatchNorm2d`, `ReLU` activation, and `MaxPool2d` (except for the last block).
-    *   **Input**: 3x32x32 images.
-    *   **Output**: A feature map of size 256x4x4.
-2.  **Flatten Layer**: Converts the 3D feature map into a 1D vector.
-3.  **Three Fully-Connected (FC) Layers**:
-    *   These layers classify the features into one of the 100 CIFAR classes.
-    *   Dropout is used to prevent overfitting.
+## Contribuciones
 
-For more details, refer to the code in `model.py` or the explanation app.
+¡Las contribuciones son bienvenidas! Siéntete libre de enviar un pull request o abrir un issue.
 
-## Contributing
+1.  Haz un Fork del proyecto
+2.  Crea una rama para tu característica (`git checkout -b feature/nueva-caracteristica`)
+3.  Haz commit de tus cambios (`git commit -m 'Añadir nueva característica'`)
+4.  Sube los cambios a tu rama (`git push origin feature/nueva-caracteristica`)
+5.  Abre un Pull Request
 
-Contributions are welcome! Please feel free to submit a pull request or open an issue.
+## Licencia
 
-1.  Fork the Project
-2.  Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3.  Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4.  Push to the Branch (`git push origin feature/AmazingFeature`)
-5.  Open a Pull Request
+Este proyecto está bajo la Licencia MIT. Consulta el archivo [LICENSE](LICENSE) para más información.
